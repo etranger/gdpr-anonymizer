@@ -1,8 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import "./static/styles/global.css";
 
 import AppHeader from "./сomponents/app-header";
+
+import "./static/styles/global.scss";
 
 // --Routes components
 import Home from "./routes/Home";

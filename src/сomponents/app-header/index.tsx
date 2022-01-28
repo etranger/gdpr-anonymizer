@@ -1,14 +1,13 @@
 import React from "react";
 
 import NavMenu from "../nav-menu";
+import styles from "./AppHeader.module.scss";
 
 const AppHeader: React.FC = () => {
   return (
-    <header className="app-header">
-      <div className="app-header__title">GDPR-anonymizer!</div>
-      <div className="app-header__nav-menu">
-        <NavMenu />
-      </div>
+    <header>
+      <div className={styles.title}>GDPR-anonymizer!</div>
+      <NavMenu />
     </header>
   );
 };

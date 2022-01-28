@@ -5,10 +5,10 @@ import styles from "./AppHeader.module.scss";
 
 const AppHeader: React.FC = () => {
   return (
-    <header>
-      <div className={styles.title}>GDPR-anonymizer!</div>
+    <div className={styles["app-header"]}>
+      <div className={styles.title}>GDPR-anonymizer</div>
       <NavMenu />
-    </header>
+    </div>
   );
 };
 

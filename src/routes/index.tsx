@@ -1,6 +1,7 @@
 import { ReactElement } from "react";
 
-import Home from "./Home";
+import NotFound from "./NotFound";
+import Main from "./Main";
 import UploadPersonalData from "./UploadPersonlData";
 
 export type RouteItem = {
@@ -9,11 +10,17 @@ export type RouteItem = {
   element: ReactElement;
 };
 
+/**
+ * name - i18n dictionary key is displayed in the nav menu and so on.
+ * path - url.
+ * element - corresponding React element
+ */
 export const routesList: RouteItem[] = [
-  { name: "Main page", path: "/", element: <Home /> },
+  { name: "routes.mainPage", path: "/", element: <Main /> },
   {
-    name: "Upload personal data",
+    name: "routes.uploadPersonalData",
     path: "upload-personal-data",
     element: <UploadPersonalData />,
   },
+  { name: "routes.notFoundPage", path: "*", element: <NotFound /> },
 ];

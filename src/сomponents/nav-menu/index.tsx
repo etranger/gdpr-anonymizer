@@ -1,10 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Menu } from "antd";
+import { useTranslate } from "react-polyglot";
 
 import { routesList } from "../../routes";
 
 const NavMenu: React.FC = () => {
+  const t = useTranslate();
+
   return (
     <nav>
       <Menu
@@ -14,7 +17,7 @@ const NavMenu: React.FC = () => {
       >
         {routesList.map(({ name, path }) => (
           <Menu.Item key={path}>
-            <Link to={path}>{name}</Link>
+            <Link to={path}>{t(name)}</Link>
           </Menu.Item>
         ))}
       </Menu>

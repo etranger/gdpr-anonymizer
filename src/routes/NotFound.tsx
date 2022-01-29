@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslate } from "react-polyglot";
 
 const NotFound: React.FC = () => {
-  return <div>404 - Not found</div>;
+  const f = useTranslate();
+  return <div>{f("notFoundPage.notFound")}</div>;
 };
 
 export default NotFound;

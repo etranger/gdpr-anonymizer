@@ -1,8 +1,8 @@
 import { ReactElement } from "react";
 
-import NotFound from "./NotFound";
-import Main from "./Main";
-import UploadPersonalData from "./UploadPersonlData";
+import NotFound from "./notFoundPage";
+import Main from "./mainPage";
+import UploadPersonalData from "./uploadPersonlDataPage";
 
 export type RouteItem = {
   path: string;

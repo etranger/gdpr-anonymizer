@@ -3,7 +3,11 @@ const dict = {
   "routes.uploadPersonalData": "Upload personal data",
   "routes.notFoundPage": "Not found",
 
-  "notFoundPage.notFound": "404 - not found :(",
+  "notFoundPage.title": "404 - not found :(",
+
+  "uploadPersonalDataPage.title": "Upload your personal data",
+  "uploadPersonalDataPage.dataProviderSelectDefault": "Select data provider",
+  "uploadPersonalDataPage.uploadFileButton": "Upload file",
 };
 
 export default dict;

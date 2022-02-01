@@ -2,32 +2,56 @@ import { DataHandler } from "../personal-data-parser";
 import parse from "../fileParsers/pdfParser";
 import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
 
-const splitPdfDataByRows = (
-  pdfData: (TextItem | TextMarkedContent)[],
-  rowSize = 11
-) => {
-  const iter = (
-    acc: (TextItem | TextMarkedContent)[][],
-    from: number
-  ): (TextItem | TextMarkedContent)[][] => {
-    if (from > pdfData.length - rowSize) {
-      return acc;
-    }
-    const to = from + rowSize;
-    return iter([...acc, pdfData.slice(from, to)], to);
-  };
-
-  return iter([], 0);
-};
-
-const formatData = (
-  pdfDataRows: (TextItem | TextMarkedContent)[][]
-): string[][] => {
-  return pdfDataRows.map((row) =>
-    row
-      .filter((col: any) => col.str !== undefined && col.str !== " ")
-      .map((col: any) => col.str)
+const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
+  const pdfDataFiltered: any[] = pdfData.filter(
+    (item: any) => item.str !== undefined && item.str !== " "
   );
+
+  const rowTemplate = [
+    /^\d{1,2}.\d{1,2}.\d{4}$/,
+    /^.+$/,
+    /^\d+$/,
+    /^\d+$/,
+    /^.+$/,
+    /^\d+,?\d{0,}$/,
+    /^\d+,?\d{0,}$/,
+  ];
+
+  const result = [];
+  let currentRow = [];
+  let currentColIndex = 0;
+  let pdfDataIndex = 0;
+
+  while (pdfDataIndex < pdfDataFiltered.length) {
+    const currentPdfDataItem = pdfDataFiltered[pdfDataIndex];
+    const itemIsValid = rowTemplate[currentColIndex].test(
+      currentPdfDataItem.str
+    );
+
+    currentRow.push(itemIsValid ? (currentPdfDataItem.str as string) : "--");
+
+    currentColIndex++;
+
+    if (itemIsValid) {
+      pdfDataIndex++;
+    }
+
+    if (currentColIndex >= rowTemplate.length) {
+      result.push(currentRow);
+      currentColIndex = 0;
+      currentRow = [];
+
+      if (!itemIsValid) {
+        //todo need to correct terminate condition and rows validation
+        console.log(
+          `An invalid row. ${result.length} rows have been processed`
+        );
+        break;
+      }
+    }
+  }
+
+  return result;
 };
 
 const testDataHandler: DataHandler = async (fileRawData) => {
@@ -37,8 +61,16 @@ const testDataHandler: DataHandler = async (fileRawData) => {
   }
 
   return {
-    colsDescription: [""],
-    data: formatData(splitPdfDataByRows(pdfData)),
+    colsDescription: [
+      "Päivämäärä",
+      "Kauppa",
+      "Kuittinumero",
+      "Korttinumero",
+      "Tuote",
+      "Määrä",
+      "Summa",
+    ],
+    data: splitPdfDataByRows(pdfData),
   };
 };
 

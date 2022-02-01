@@ -23,7 +23,17 @@ const pdp: Pdp = {
   dataHandlers: { test: testDataHandler },
 
   async process(fileRawData, dataProvider) {
-    return await this.dataHandlers[dataProvider](fileRawData);
+    const personalDataSet = await this.dataHandlers[dataProvider](fileRawData);
+
+    personalDataSet.data.forEach((row, index) => {
+      if (row.length !== personalDataSet.colsDescription.length) {
+        throw new Error(
+          `Incorrect cols description. Cols description length: ${personalDataSet.colsDescription.length}, row no: ${index}, row length: ${row.length}`
+        );
+      }
+    });
+
+    return personalDataSet;
   },
 };
 

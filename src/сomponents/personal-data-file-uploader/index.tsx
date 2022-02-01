@@ -2,9 +2,18 @@ import React, { useRef, useCallback, ChangeEvent } from "react";
 import { useTranslate } from "react-polyglot";
 import { Button } from "antd";
 
-import pdp, { DataProviders } from "../../servicces/personal-data-parser";
+import pdp, {
+  DataProviders,
+  PersonalDataSet,
+} from "../../servicces/personal-data-parser";
 
-const PersonalDataFileUploader: React.FC = () => {
+type Props = {
+  onPersonalDataLoaded: (personalDataSet: PersonalDataSet) => void;
+};
+
+const PersonalDataFileUploader: React.FC<Props> = ({
+  onPersonalDataLoaded,
+}) => {
   const f = useTranslate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -27,7 +36,7 @@ const PersonalDataFileUploader: React.FC = () => {
         fileRawData,
         DataProviders.test
       );
-      console.log(personalDataSet);
+      onPersonalDataLoaded(personalDataSet);
     } catch (error) {
       console.error(error);
     }

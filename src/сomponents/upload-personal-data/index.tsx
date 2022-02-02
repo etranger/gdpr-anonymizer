@@ -1,17 +1,21 @@
 import React, { useCallback, useState } from "react";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table } from "antd";
+import { Typography, Table, Checkbox } from "antd";
 
 import DataProviderSelect from "../data-provider-select";
 import PersonalDataFileUploader from "../personal-data-file-uploader";
+import ReceivingRoyalty from "../receiving-royalty";
 import { PersonalDataSet } from "../../servicces/personal-data-parser";
 
-type TableDataRow = { [key: string]: string };
+import styles from "./uploadPersonalData.module.scss";
 
-type ColDescription = {
-  title: string;
+export type TableDataRow = { [key: string]: string };
+
+export type ColDescription = {
+  title: string | object;
   dataIndex: string;
   key: string;
+  checked: boolean;
 };
 
 const UploadPersonalData: React.FC = () => {
@@ -19,8 +23,14 @@ const UploadPersonalData: React.FC = () => {
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
 
+  const checkboxHandler = (index: number) => {
+    colsDescription[index].checked = !colsDescription[index].checked;
+    setColsDescription(colsDescription);
+  };
+
   const onPersonalDataLoadedHandler = useCallback(
     (personalDataSet: PersonalDataSet) => {
+      console.log("-personalDataSet-", personalDataSet);
       const tableData = personalDataSet.data.map((row, rowIndex) => {
         return row.reduce(
           (acc: { [key: string]: string }, item, colIndex) => {
@@ -34,12 +44,16 @@ const UploadPersonalData: React.FC = () => {
       setTableData(tableData);
 
       const colsDescription: ColDescription[] =
-        personalDataSet.colsDescription.map((colName) => ({
-          title: colName,
+        personalDataSet.colsDescription.map((colName, index) => ({
+          title: () => (
+            <Checkbox onChange={() => checkboxHandler(index)}>
+              {colName}
+            </Checkbox>
+          ),
           dataIndex: colName,
           key: colName,
+          checked: false,
         }));
-
       setColsDescription(colsDescription);
     },
     []
@@ -52,7 +66,12 @@ const UploadPersonalData: React.FC = () => {
       <PersonalDataFileUploader
         onPersonalDataLoaded={onPersonalDataLoadedHandler}
       />
-      <Table dataSource={tableData} columns={colsDescription} />;
+      <Table
+        className={styles.table}
+        dataSource={tableData}
+        columns={colsDescription}
+      />
+      <ReceivingRoyalty data={tableData} columns={colsDescription} />
     </div>
   );
 };

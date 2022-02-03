@@ -1,11 +1,11 @@
 import React, { useCallback, useState, ChangeEvent } from "react";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table, message } from "antd";
+import { Typography, Table, message, Checkbox } from "antd";
+import { CheckboxChangeEvent } from "antd/lib/checkbox";
 
 import DataProviderSelect from "../data-provider-select";
 import PersonalDataFileUploader from "../personal-data-file-uploader";
 import ReceivingRoyalty from "../receiving-royalty";
-import TableHeadCheckbox from "../table-head-checkbox";
 import { PersonalDataSet } from "../../servicces/personal-data-parser";
 
 import styles from "./uploadPersonalData.module.scss";
@@ -13,10 +13,9 @@ import styles from "./uploadPersonalData.module.scss";
 export type TableDataRow = { [key: string]: string };
 
 export type ColDescription = {
-  title: () => void;
+  title: JSX.Element;
   dataIndex: string;
   key: string;
-  isPossibleToUse: boolean;
 };
 
 const UploadPersonalData: React.FC = () => {
@@ -24,19 +23,20 @@ const UploadPersonalData: React.FC = () => {
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
   const [walletKey, setWalletKey] = useState<string>("");
+  const [disallowedCols, setDisallowedCols] = useState<Set<string>>(new Set());
 
-  // const colCheckboxHandler = useCallback(
-  //   (index: number) => {
-  //     if (!colsDescription[index]) {
-  //       return;
-  //     }
+  const titleCheckboxInputHandler = useCallback(
+    (colName: string) => (event: CheckboxChangeEvent) => {
+      if (!event.target.checked) {
+        disallowedCols.add(colName);
+      } else {
+        disallowedCols.delete(colName);
+      }
 
-  //     colsDescription[index].isPossibleToUse =
-  //       !colsDescription[index].isPossibleToUse;
-  //     setColsDescription(colsDescription);
-  //   },
-  //   [colsDescription]
-  // );
+      setDisallowedCols(disallowedCols);
+    },
+    [disallowedCols]
+  );
 
   const onPersonalDataLoadedHandler = useCallback(
     (personalDataSet: PersonalDataSet) => {
@@ -52,30 +52,22 @@ const UploadPersonalData: React.FC = () => {
       });
       setTableData(tableData);
 
-      const colCheckboxHandler = (index: number) => {
-        if (!colsDescription[index]) {
-          return;
-        }
-
-        colsDescription[index].isPossibleToUse =
-          !colsDescription[index].isPossibleToUse;
-        setColsDescription(colsDescription);
-      };
       const colsDescription: ColDescription[] =
-        personalDataSet.colsDescription.map((colName, index) => ({
-          title: () => (
-            <TableHeadCheckbox
-              colName={colName}
-              checkboxHandler={() => colCheckboxHandler(index)}
-            />
+        personalDataSet.colsDescription.map((colName) => ({
+          title: (
+            <Checkbox
+              defaultChecked
+              onChange={titleCheckboxInputHandler(colName)}
+            >
+              {colName}
+            </Checkbox>
           ),
           dataIndex: colName,
           key: colName,
-          isPossibleToUse: false,
         }));
       setColsDescription(colsDescription);
     },
-    []
+    [titleCheckboxInputHandler]
   );
 
   const sendPersonalDataHandler = useCallback(() => {
@@ -84,21 +76,14 @@ const UploadPersonalData: React.FC = () => {
       return;
     }
 
-    const fetchData: TableDataRow[] = tableData.map((row) => {
-      let result: TableDataRow = {};
-      colsDescription.forEach((col) => {
-        if (!row[col.key] || col.isPossibleToUse) {
-          return;
-        }
-
-        result[col.key] = row[col.key];
-      });
-
-      return result;
-    });
+    const fetchData = tableData.map((row) =>
+      Object.entries(row).filter(
+        (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
+      )
+    );
 
     console.log("-send-", fetchData);
-  }, [walletKey, tableData, colsDescription]);
+  }, [walletKey, tableData, disallowedCols]);
 
   const walletKeyChangeHandler = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setWalletKey(event.target.value),

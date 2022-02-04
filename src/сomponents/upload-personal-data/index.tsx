@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, ChangeEvent } from "react";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table, Checkbox } from "antd";
+import { Typography, Table, message, Checkbox } from "antd";
+import { CheckboxChangeEvent } from "antd/lib/checkbox";
 
 import DataProviderSelect from "../data-provider-select";
 import PersonalDataFileUploader from "../personal-data-file-uploader";
@@ -12,25 +13,33 @@ import styles from "./uploadPersonalData.module.scss";
 export type TableDataRow = { [key: string]: string };
 
 export type ColDescription = {
-  title: string | object;
+  title: JSX.Element;
   dataIndex: string;
   key: string;
-  checked: boolean;
 };
 
 const UploadPersonalData: React.FC = () => {
   const f = useTranslate();
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
+  const [walletKey, setWalletKey] = useState<string>("");
+  const [disallowedCols, setDisallowedCols] = useState<Set<string>>(new Set());
 
-  const checkboxHandler = (index: number) => {
-    colsDescription[index].checked = !colsDescription[index].checked;
-    setColsDescription(colsDescription);
-  };
+  const titleCheckboxInputHandler = useCallback(
+    (colName: string) => (event: CheckboxChangeEvent) => {
+      if (!event.target.checked) {
+        disallowedCols.add(colName);
+      } else {
+        disallowedCols.delete(colName);
+      }
+
+      setDisallowedCols(disallowedCols);
+    },
+    [disallowedCols]
+  );
 
   const onPersonalDataLoadedHandler = useCallback(
     (personalDataSet: PersonalDataSet) => {
-      console.log("-personalDataSet-", personalDataSet);
       const tableData = personalDataSet.data.map((row, rowIndex) => {
         return row.reduce(
           (acc: { [key: string]: string }, item, colIndex) => {
@@ -44,18 +53,40 @@ const UploadPersonalData: React.FC = () => {
       setTableData(tableData);
 
       const colsDescription: ColDescription[] =
-        personalDataSet.colsDescription.map((colName, index) => ({
-          title: () => (
-            <Checkbox onChange={() => checkboxHandler(index)}>
+        personalDataSet.colsDescription.map((colName) => ({
+          title: (
+            <Checkbox
+              defaultChecked
+              onChange={titleCheckboxInputHandler(colName)}
+            >
               {colName}
             </Checkbox>
           ),
           dataIndex: colName,
           key: colName,
-          checked: false,
         }));
       setColsDescription(colsDescription);
     },
+    [titleCheckboxInputHandler]
+  );
+
+  const sendPersonalDataHandler = useCallback(() => {
+    if (walletKey === "") {
+      message.warning("Wrong Lightning wallet");
+      return;
+    }
+
+    const fetchData = tableData.map((row) =>
+      Object.entries(row).filter(
+        (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
+      )
+    );
+
+    console.log("-send-", fetchData);
+  }, [walletKey, tableData, disallowedCols]);
+
+  const walletKeyChangeHandler = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setWalletKey(event.target.value),
     []
   );
 
@@ -71,7 +102,10 @@ const UploadPersonalData: React.FC = () => {
         dataSource={tableData}
         columns={colsDescription}
       />
-      <ReceivingRoyalty data={tableData} columns={colsDescription} />
+      <ReceivingRoyalty
+        inputChangeHandler={walletKeyChangeHandler}
+        buttonClickHandler={sendPersonalDataHandler}
+      />
     </div>
   );
 };

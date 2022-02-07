@@ -7,6 +7,8 @@ const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
     (item: any) => item.str !== undefined && item.str !== " "
   );
 
+  console.log("Step 2 - delete apaces and undefined values:", pdfDataFiltered);
+
   const rowTemplate = [
     /^\d{1,2}.\d{1,2}.\d{4}$/,
     /^.+$/,
@@ -22,10 +24,22 @@ const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
   let currentColIndex = 0;
   let pdfDataIndex = 0;
 
+  console.log("Step 3 - format rows:");
+
   while (pdfDataIndex < pdfDataFiltered.length) {
     const currentPdfDataItem = pdfDataFiltered[pdfDataIndex];
+
     const itemIsValid = rowTemplate[currentColIndex].test(
       currentPdfDataItem.str
+    );
+
+    console.log(
+      "Current item:",
+      currentPdfDataItem.str,
+      ", regExp:",
+      rowTemplate[currentColIndex],
+      ", is valid:",
+      itemIsValid
     );
 
     currentRow.push(itemIsValid ? (currentPdfDataItem.str as string) : "--");
@@ -37,6 +51,9 @@ const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
     }
 
     if (currentColIndex >= rowTemplate.length) {
+      console.log("Row has formated", currentRow);
+      console.log("===================================");
+
       result.push(currentRow);
       currentColIndex = 0;
       currentRow = [];
@@ -56,6 +73,9 @@ const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
 
 const testDataHandler: DataHandler = async (fileRawData) => {
   const pdfData = await parse(fileRawData);
+
+  console.log("Step 1 - raw PDF data:", pdfData);
+
   if (!pdfData) {
     throw new Error("Invalid file data");
   }

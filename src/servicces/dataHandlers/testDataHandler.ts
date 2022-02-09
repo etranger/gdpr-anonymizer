@@ -29,6 +29,15 @@ const splitPdfDataByRows = (pdfData: string[]) => {
 
   console.log("Step 3 - delete table of content:", pdfDataFiltered);
 
+  const pdfDataPreClearingToRows = pdfDataFiltered.filter(
+    (value, index, array) =>
+      value !== "Yhteensä" &&
+      array[index - 1] !== "Yhteensä" &&
+      array[index - 2] !== "Yhteensä"
+  );
+
+  console.log("Step 4 - Pre-cleaning to rows:", pdfDataPreClearingToRows);
+
   const rowTemplate = [
     /^\d{1,2}.\d{1,2}.\d{4}$/,
     /^.+$/,
@@ -44,10 +53,10 @@ const splitPdfDataByRows = (pdfData: string[]) => {
   let currentColIndex = 0;
   let pdfDataIndex = 0;
 
-  console.log("Step 4 - format rows:");
+  console.log("Step 5 - format rows:");
 
-  while (pdfDataIndex < pdfDataFiltered.length) {
-    const currentPdfDataItem = pdfDataFiltered[pdfDataIndex];
+  while (pdfDataIndex < pdfDataPreClearingToRows.length) {
+    const currentPdfDataItem = pdfDataPreClearingToRows[pdfDataIndex];
 
     const itemIsValid = rowTemplate[currentColIndex].test(currentPdfDataItem);
 

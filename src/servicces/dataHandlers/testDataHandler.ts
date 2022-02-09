@@ -1,13 +1,33 @@
 import { DataHandler } from "../personal-data-parser";
 import parse from "../fileParsers/pdfParser";
-import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
 
-const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
-  const pdfDataFiltered: any[] = pdfData.filter(
-    (item: any) => item.str !== undefined && item.str !== " "
+const splitPdfDataByRows = (pdfData: string[]) => {
+  const pdfDataWithoutSpaces = pdfData.filter(
+    (item: any) => item !== undefined && item !== " " && item !== ""
   );
 
-  console.log("Step 2 - delete apaces and undefined values:", pdfDataFiltered);
+  console.log(
+    "Step 2 - delete spaces and undefined values:",
+    pdfDataWithoutSpaces
+  );
+
+  let pdfDataFiltered: string[] = pdfDataWithoutSpaces;
+
+  const pdfDataHasTableOfContent = pdfDataWithoutSpaces.find(
+    (str) => str === "Ostosi tuotetasolla"
+  );
+
+  if (pdfDataHasTableOfContent) {
+    const tableOfContentEndsIndex = pdfDataWithoutSpaces.findIndex(
+      (str) => str === "Summa sis. ALV"
+    );
+
+    pdfDataFiltered = pdfDataWithoutSpaces.slice(
+      tableOfContentEndsIndex > 0 ? tableOfContentEndsIndex + 1 : 0
+    );
+  }
+
+  console.log("Step 3 - delete table of content:", pdfDataFiltered);
 
   const rowTemplate = [
     /^\d{1,2}.\d{1,2}.\d{4}$/,
@@ -24,25 +44,23 @@ const splitPdfDataByRows = (pdfData: (TextItem | TextMarkedContent)[]) => {
   let currentColIndex = 0;
   let pdfDataIndex = 0;
 
-  console.log("Step 3 - format rows:");
+  console.log("Step 4 - format rows:");
 
   while (pdfDataIndex < pdfDataFiltered.length) {
     const currentPdfDataItem = pdfDataFiltered[pdfDataIndex];
 
-    const itemIsValid = rowTemplate[currentColIndex].test(
-      currentPdfDataItem.str
-    );
+    const itemIsValid = rowTemplate[currentColIndex].test(currentPdfDataItem);
 
     console.log(
       "Current item:",
-      currentPdfDataItem.str,
+      currentPdfDataItem,
       ", regExp:",
       rowTemplate[currentColIndex],
       ", is valid:",
       itemIsValid
     );
 
-    currentRow.push(itemIsValid ? (currentPdfDataItem.str as string) : "--");
+    currentRow.push(itemIsValid ? currentPdfDataItem : "--");
 
     currentColIndex++;
 

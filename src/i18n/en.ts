@@ -7,7 +7,7 @@ const dict = {
 
   "uploadPersonalDataPage.title": "Upload your personal data",
   "uploadPersonalDataPage.dataProviderSelectDefault": "Select data provider",
-  "uploadPersonalDataPage.uploadFileButton": "Upload file",
+  "uploadPersonalDataPage.uploadFileButton": "Select file",
   "uploadPersonalDataPage.receivingRoyaltyInput":
     "Enter your lightning wallet to receive royalty",
   "uploadPersonalDataPage.receivingRoyaltyButton": "Process data",

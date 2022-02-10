@@ -101,6 +101,7 @@ const UploadPersonalData: React.FC = () => {
         className={styles.table}
         dataSource={tableData}
         columns={colsDescription}
+        pagination={{ pageSize: 100 }}
       />
       <ReceivingRoyalty
         inputChangeHandler={walletKeyChangeHandler}

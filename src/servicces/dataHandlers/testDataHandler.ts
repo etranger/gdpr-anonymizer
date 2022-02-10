@@ -30,13 +30,10 @@ const splitPdfDataByRows = (pdfData: string[]) => {
   console.log("Step 3 - delete table of content:", pdfDataFiltered);
 
   const pdfDataPreClearingToRows = pdfDataFiltered.filter(
-    (value, index, array) => {
-      if (value === "Yhteensä") return false;
-      if (array[index - 1] === "Yhteensä") return false;
-      if (array[index - 2] === "Yhteensä") return false;
-
-      return true;
-    }
+    (value, index, array) =>
+      value !== "Yhteensä:" &&
+      array[index - 1] !== "Yhteensä:" &&
+      array[index - 2] !== "Yhteensä:"
   );
 
   console.log("Step 4 - Pre-cleaning to rows:", pdfDataPreClearingToRows);

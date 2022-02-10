@@ -8,6 +8,7 @@ export type RouteItem = {
   path: string;
   name: string;
   element: ReactElement;
+  hideOnNavbar?: boolean;
 };
 
 /**
@@ -16,11 +17,16 @@ export type RouteItem = {
  * element - corresponding React element
  */
 export const routesList: RouteItem[] = [
-  { name: "routes.mainPage", path: "/", element: <Main /> },
+  // { name: "routes.mainPage", path: "/", element: <Main /> },
   {
     name: "routes.uploadPersonalData",
-    path: "upload-personal-data",
+    path: "/", // upload-personal-data
     element: <UploadPersonalData />,
   },
-  { name: "routes.notFoundPage", path: "*", element: <NotFound /> },
+  {
+    name: "routes.notFoundPage",
+    path: "*",
+    element: <NotFound />,
+    hideOnNavbar: true,
+  },
 ];

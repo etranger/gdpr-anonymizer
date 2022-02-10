@@ -15,11 +15,14 @@ const NavMenu: React.FC = () => {
         mode="horizontal"
         defaultSelectedKeys={[routesList[0].path]}
       >
-        {routesList.map(({ name, path }) => (
-          <Menu.Item key={path}>
-            <Link to={path}>{t(name)}</Link>
-          </Menu.Item>
-        ))}
+        {routesList.map(
+          ({ name, path, hideOnNavbar }) =>
+            !hideOnNavbar && (
+              <Menu.Item key={path}>
+                <Link to={path}>{t(name)}</Link>
+              </Menu.Item>
+            )
+        )}
       </Menu>
     </nav>
   );

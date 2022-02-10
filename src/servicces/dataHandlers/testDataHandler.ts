@@ -29,11 +29,49 @@ const splitPdfDataByRows = (pdfData: string[]) => {
 
   console.log("Step 3 - delete table of content:", pdfDataFiltered);
 
+  const cleaningSubjects: string[] = [
+    "Päivämäärä",
+    "Kauppa",
+    "Kuittinumero",
+    "Korttinumero",
+    "Tuote",
+    "Määrä",
+    "Summa sis. ALV",
+    "K-Plussa",
+    "Luottamuksellinen",
+  ];
+  const isPaginationNumber = (index: number, array: string[]) => {
+    const isNumber = (value: string) => /^\d{1,2}$/.test(value);
+    const isSlash =
+      array[index] === "/" &&
+      isNumber(array[index - 1]) &&
+      isNumber(array[index + 1]);
+    const isLeftNumber = isNumber(array[index]) && array[index + 1] === "/";
+    const isRightNumber = isNumber(array[index]) && array[index - 1] === "/";
+    const isFullPagination = /^\d{1,2}\/\d{1,2}$/.test(array[index]);
+
+    return isSlash || isLeftNumber || isRightNumber || isFullPagination;
+  };
+  const isDataDate = (value: string) => {
+    const regex = /\d{4}-\d{1,2}-\d{1,2}/;
+    if (regex.test(value)) return true;
+    if (value === "Tiedot ajettu:") return true;
+
+    return false;
+  };
+  const isTotalText = (index: number, array: string[]) => {
+    if (array[index] === "Yhteensä:") return true;
+    if (array[index - 1] === "Yhteensä:") return true;
+    if (array[index - 2] === "Yhteensä:") return true;
+
+    return false;
+  };
   const pdfDataPreClearingToRows = pdfDataFiltered.filter(
     (value, index, array) => {
-      if (value === "Yhteensä:") return false;
-      if (array[index - 1] === "Yhteensä:") return false;
-      if (array[index - 2] === "Yhteensä:") return false;
+      if (cleaningSubjects.includes(value)) return false;
+      if (isDataDate(array[index])) return false;
+      if (isTotalText(index, array)) return false;
+      if (isPaginationNumber(index, array)) return false;
 
       return true;
     }

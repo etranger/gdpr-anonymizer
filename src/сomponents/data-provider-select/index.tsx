@@ -14,7 +14,7 @@ const DataProviderSelect: React.FC = () => {
       disabled: true,
     },
     {
-      title: "K-Plussa",
+      title: "uploadPersonalDataPage.dataProviderSelectKPlussa",
       value: "K-Plussa",
     },
   ]);

@@ -98,6 +98,12 @@ const splitPdfDataByRows = (pdfData: string[]) => {
   return result;
 };
 
+const numberingRows = (splittedPdfData: string[][]) =>
+  splittedPdfData.map((value, index) => {
+    value.unshift(String(index));
+    return value;
+  });
+
 const testDataHandler: DataHandler = async (fileRawData) => {
   const pdfData = await parse(fileRawData);
 
@@ -109,6 +115,7 @@ const testDataHandler: DataHandler = async (fileRawData) => {
 
   return {
     colsDescription: [
+      "№",
       "Päivämäärä",
       "Kauppa",
       "Kuittinumero",
@@ -117,7 +124,7 @@ const testDataHandler: DataHandler = async (fileRawData) => {
       "Määrä",
       "Summa",
     ],
-    data: splitPdfDataByRows(pdfData),
+    data: numberingRows(splitPdfDataByRows(pdfData)),
   };
 };
 

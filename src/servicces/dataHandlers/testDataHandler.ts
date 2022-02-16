@@ -93,6 +93,7 @@ const splitPdfDataByRows = (pdfData: string[]) => {
   let currentRow = [];
   let currentColIndex = 0;
   let pdfDataIndex = 0;
+  let correctCounter = 0;
 
   console.log("Step 5 - format rows:");
 
@@ -122,7 +123,9 @@ const splitPdfDataByRows = (pdfData: string[]) => {
       console.log("Row has formated", currentRow);
       console.log("===================================");
 
-      result.push(currentRow);
+      correctCounter++;
+      result.push([String(correctCounter), ...currentRow]);
+
       currentColIndex = 0;
       currentRow = [];
 
@@ -138,12 +141,6 @@ const splitPdfDataByRows = (pdfData: string[]) => {
 
   return result;
 };
-
-const numberingRows = (splittedPdfData: string[][]) =>
-  splittedPdfData.map((value, index) => {
-    value.unshift(String(index));
-    return value;
-  });
 
 const testDataHandler: DataHandler = async (fileRawData) => {
   const pdfData = await parse(fileRawData);
@@ -165,7 +162,7 @@ const testDataHandler: DataHandler = async (fileRawData) => {
       "Määrä",
       "Summa",
     ],
-    data: numberingRows(splitPdfDataByRows(pdfData)),
+    data: splitPdfDataByRows(pdfData),
   };
 };
 

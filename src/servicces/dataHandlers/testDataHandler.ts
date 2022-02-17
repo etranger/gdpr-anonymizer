@@ -1,6 +1,92 @@
 import { DataHandler } from "../personal-data-parser";
 import parse from "../fileParsers/pdfParser";
 
+async function process(data: string[]) {
+  type ColTest = (strIndex: number) => boolean;
+
+  const colTests: ColTest[] = [
+    (strIndex) => /^\d{1,2}.\d{1,2}.\d{4}$/.test(data[strIndex]),
+    (strIndex) =>
+      /^.+$/.test(data[strIndex]) &&
+      !colTests[0](strIndex) &&
+      !colTests[2](strIndex),
+    (strIndex) => {
+      const t = /^\d+$/.test(data[strIndex]) && !colTests[3](strIndex);
+      return t;
+    },
+    (strIndex) => {
+      const t = /^\d+$/.test(data[strIndex]) && colTests[2](strIndex - 1);
+      return t;
+    },
+    (strIndex) =>
+      /^.+$/.test(data[strIndex]) &&
+      !colTests[3](strIndex) &&
+      !colTests[5](strIndex),
+    (strIndex) => {
+      const t = /^\d+,?\d{0,}$/.test(data[strIndex]) && !colTests[6](strIndex);
+      return t;
+    },
+    (strIndex) => {
+      const t =
+        /^\d+,?\d{0,}$/.test(data[strIndex]) && colTests[5](strIndex - 1);
+      return t;
+    },
+  ];
+
+  const p = new Promise<string[][]>((resolve) => {
+    const result: string[][] = [];
+
+    const iter = (
+      currentStrIndex: number = 0,
+      currentColIndex: number = 0,
+      colAcc: string[] = [],
+      rowAcc: string[] = []
+    ) =>
+      setTimeout(() => {
+        if (currentStrIndex > data.length - 1) {
+          resolve(result);
+        }
+
+        if (currentColIndex > colTests.length - 1) {
+          result.push(rowAcc);
+          iter(currentStrIndex);
+        } else if (
+          colTests[currentColIndex](currentStrIndex) &&
+          !colTests[
+            currentColIndex < colTests.length - 1 ? currentColIndex + 1 : 0
+          ](currentStrIndex)
+        ) {
+          iter(
+            currentStrIndex + 1,
+            currentColIndex,
+            [...colAcc, data[currentStrIndex]],
+            rowAcc
+          );
+        } else if (!colTests[currentColIndex](currentStrIndex)) {
+          iter(
+            currentStrIndex,
+            currentColIndex + 1,
+            [],
+            [...rowAcc, colAcc.join()]
+          );
+        } else if (
+          colTests[currentColIndex](currentStrIndex) &&
+          colTests[
+            currentColIndex < colTests.length - 1 ? currentColIndex + 1 : 0
+          ](currentStrIndex)
+        ) {
+          iter(currentStrIndex + 1);
+        }
+      }, 0);
+
+    iter();
+  });
+
+  p.then((r) => console.log(r));
+
+  return [];
+}
+
 const splitPdfDataByRows = (pdfData: string[]) => {
   const pdfDataWithoutSpaces = pdfData.filter(
     (item: any) => item !== undefined && item !== " " && item !== ""
@@ -145,7 +231,7 @@ const splitPdfDataByRows = (pdfData: string[]) => {
 const testDataHandler: DataHandler = async (fileRawData) => {
   const pdfData = await parse(fileRawData);
 
-  console.log("Step 1 - raw PDF data:", pdfData);
+  // console.log("Step 1 - raw PDF data:", pdfData);
 
   if (!pdfData) {
     throw new Error("Invalid file data");
@@ -162,7 +248,11 @@ const testDataHandler: DataHandler = async (fileRawData) => {
       "Määrä",
       "Summa",
     ],
-    data: splitPdfDataByRows(pdfData),
+    data: await process(
+      pdfData.filter(
+        (item: any) => item !== undefined && item !== " " && item !== ""
+      )
+    ),
   };
 };
 

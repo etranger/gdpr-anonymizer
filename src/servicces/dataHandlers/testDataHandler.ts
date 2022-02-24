@@ -43,9 +43,36 @@ const findTitleRow = (pdfData: TextItem[][]): TextItem[] | undefined => {
   });
 };
 
-const format = (pdfData: TextItem[][], titleRow: TextItem[]) => {
+const testRow = (row: string[]) => {
+  if (row.every((item) => item === "")) {
+    return false;
+  }
+
+  let result = true;
+
+  const tests = [
+    (str: string) => /^\d{1,2}.\d{1,2}.\d{4}$/.test(str),
+    (str: string) => /^.+$/.test(str),
+    (str: string) => /^\d+$/.test(str),
+    (str: string) => /^\d+$/.test(str),
+    (str: string) => /^.+$/.test(str),
+    (str: string) => /^\d+,?\d{0,}$/.test(str),
+    (str: string) => /^\d+,?\d{0,}$/.test(str),
+  ];
+
+  for (let index in row) {
+    if (row[index] !== "" && !tests[index](row[index])) {
+      result = false;
+      break;
+    }
+  }
+
+  return result;
+};
+
+const format = (pdfData: TextItem[][], titleRow: TextItem[]): string[][] => {
   return pdfData.reduce((acc: any, row) => {
-    const formatedRow: TextItem[][] = [[], [], [], [], [], [], []];
+    const formatedRow: string[][] = [[""], [""], [""], [""], [""], [""], [""]];
     let currentColIndex = 0;
     let currentItemIndex = 0;
 
@@ -57,14 +84,18 @@ const format = (pdfData: TextItem[][], titleRow: TextItem[]) => {
           ? item.transform[4] < titleRow[currentColIndex + 1].transform[4]
           : true)
       ) {
-        formatedRow[currentColIndex].push(item);
+        formatedRow[currentColIndex].push(item.str);
         currentItemIndex++;
       } else {
         currentColIndex++;
       }
     }
 
-    acc.push(formatedRow);
+    const resultRow = formatedRow.map((item) => item.join(""));
+    if (testRow(resultRow)) {
+      acc.push(resultRow);
+    }
+
     return acc;
   }, []);
 };
@@ -78,14 +109,15 @@ const testDataHandler: DataHandler = async (fileRawData) => {
 
   const processedRawData = processRawData(pdfData as TextItem[]);
 
-  console.log(processedRawData);
-
   const titleRow = findTitleRow(processedRawData);
 
-  if (titleRow) {
-    const result = format(processedRawData, titleRow);
-    console.log(result);
+  if (!titleRow) {
+    throw new Error("The title row has not been found.");
   }
+
+  const formatedData = format(processedRawData, titleRow);
+
+  console.log(formatedData);
 
   return {
     colsDescription: [
@@ -98,10 +130,10 @@ const testDataHandler: DataHandler = async (fileRawData) => {
       "Määrä",
       "Summa",
     ],
-    data: [],
-    // pdfData.filter(
-    //   (item: any) => item !== undefined && item !== " " && item !== ""
-    // )
+    data: formatedData.map((row, index) => {
+      row.unshift(String(index + 1));
+      return row;
+    }),
   };
 };
 

@@ -9,10 +9,12 @@ import pdp, {
 
 type Props = {
   onPersonalDataLoaded: (personalDataSet: PersonalDataSet) => void;
+  onDataProcessingStart: (value: boolean) => void;
 };
 
 const PersonalDataFileUploader: React.FC<Props> = ({
   onPersonalDataLoaded,
+  onDataProcessingStart,
 }) => {
   const f = useTranslate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +34,7 @@ const PersonalDataFileUploader: React.FC<Props> = ({
 
     const fileRawData = window.URL.createObjectURL(event.target.files[0]);
     try {
+      onDataProcessingStart(true);
       const personalDataSet = await pdp.process(
         fileRawData,
         DataProviders.test

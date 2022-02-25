@@ -1,6 +1,6 @@
-import React, { useCallback, useState, ChangeEvent } from "react";
+import React, { useCallback, useState, ChangeEvent, useEffect } from "react";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table, message, Checkbox } from "antd";
+import { Typography, Table, message, Checkbox, Spin } from "antd";
 import { CheckboxChangeEvent } from "antd/lib/checkbox";
 
 import DataProviderSelect from "../data-provider-select";
@@ -20,10 +20,16 @@ export type ColDescription = {
 
 const UploadPersonalData: React.FC = () => {
   const f = useTranslate();
+  const [tableDataLoader, setTableDataLoader] = useState<boolean>(false);
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
   const [walletKey, setWalletKey] = useState<string>("");
   const [disallowedCols, setDisallowedCols] = useState<Set<string>>(new Set());
+
+  const onDataProcessingStart = useCallback(
+    (value: boolean) => setTableDataLoader(value),
+    []
+  );
 
   const titleCheckboxInputHandler = useCallback(
     (colName: string) => (event: CheckboxChangeEvent) => {
@@ -66,6 +72,8 @@ const UploadPersonalData: React.FC = () => {
           key: colName,
         }));
       setColsDescription(colsDescription);
+
+      setTableDataLoader(false);
     },
     [titleCheckboxInputHandler]
   );
@@ -96,8 +104,10 @@ const UploadPersonalData: React.FC = () => {
       <DataProviderSelect />
       <PersonalDataFileUploader
         onPersonalDataLoaded={onPersonalDataLoadedHandler}
+        onDataProcessingStart={onDataProcessingStart}
       />
       <Table
+        loading={tableDataLoader}
         className={styles.table}
         dataSource={tableData}
         columns={colsDescription}

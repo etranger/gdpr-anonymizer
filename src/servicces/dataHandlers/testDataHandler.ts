@@ -44,12 +44,6 @@ const findTitleRow = (pdfData: TextItem[][]): TextItem[] | undefined => {
 };
 
 const testRow = (row: string[]) => {
-  if (row.every((item) => item === "")) {
-    return false;
-  }
-
-  let result = true;
-
   const tests = [
     (str: string) => /^\d{1,2}.\d{1,2}.\d{4}$/.test(str),
     (str: string) => /^.+$/.test(str),
@@ -59,6 +53,12 @@ const testRow = (row: string[]) => {
     (str: string) => /^\d+,?\d{0,}$/.test(str),
     (str: string) => /^\d+,?\d{0,}$/.test(str),
   ];
+
+  if (row.every((item) => item === "") || !tests[0](row[0])) {
+    return false;
+  }
+
+  let result = true;
 
   for (let index in row) {
     if (row[index] !== "" && !tests[index](row[index])) {

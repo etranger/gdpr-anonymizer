@@ -1,6 +1,8 @@
-import React, { useCallback, useState, ChangeEvent, useEffect } from "react";
+import React, { useCallback, useState, ChangeEvent } from "react";
+import { observer } from "mobx-react-lite";
+import { usePersonalData } from "../../store";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table, message, Checkbox, Spin } from "antd";
+import { Typography, Table, message, Checkbox } from "antd";
 import { CheckboxChangeEvent } from "antd/lib/checkbox";
 
 import DataProviderSelect from "../data-provider-select";
@@ -20,7 +22,10 @@ export type ColDescription = {
 
 const UploadPersonalData: React.FC = () => {
   const f = useTranslate();
+  const personalDataStore = usePersonalData();
+
   const [tableDataLoader, setTableDataLoader] = useState<boolean>(false);
+  const [uploadDataLoader, setUploadDataLoader] = useState<boolean>(false);
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
   const [walletKey, setWalletKey] = useState<string>("");
@@ -29,6 +34,10 @@ const UploadPersonalData: React.FC = () => {
   const onDataProcessingStart = useCallback(
     (value: boolean) => setTableDataLoader(value),
     []
+  );
+  const uploadData = useCallback(
+    (value: TableDataRow[]) => personalDataStore.uploadData(value),
+    [personalDataStore]
   );
 
   const titleCheckboxInputHandler = useCallback(
@@ -80,18 +89,37 @@ const UploadPersonalData: React.FC = () => {
 
   const sendPersonalDataHandler = useCallback(() => {
     if (walletKey === "") {
-      message.warning("Wrong Lightning wallet");
+      message.warning("Wrong Lightning Wallet");
       return;
     }
 
+    if (!tableData.length) {
+      message.info("Please select the file");
+      return;
+    }
+
+    setUploadDataLoader(true);
+
     const fetchData = tableData.map((row) =>
-      Object.entries(row).filter(
-        (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
+      Object.fromEntries(
+        Object.entries(row).filter(
+          (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
+        )
       )
     );
 
-    console.log("-send-", fetchData);
-  }, [walletKey, tableData, disallowedCols]);
+    uploadData(fetchData)
+      .then(() => {
+        message.success("Success");
+        setUploadDataLoader(false);
+      })
+      .catch((err) => {
+        message.warning("Something went wrong, try again later!");
+        message.warning("Error message: " + err.message);
+        console.log("Error message: ", err.message);
+        setUploadDataLoader(false);
+      });
+  }, [walletKey, tableData, disallowedCols, uploadData]);
 
   const walletKeyChangeHandler = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setWalletKey(event.target.value),
@@ -114,6 +142,7 @@ const UploadPersonalData: React.FC = () => {
         pagination={{ pageSize: 100 }}
       />
       <ReceivingRoyalty
+        loading={uploadDataLoader}
         inputChangeHandler={walletKeyChangeHandler}
         buttonClickHandler={sendPersonalDataHandler}
       />
@@ -121,4 +150,4 @@ const UploadPersonalData: React.FC = () => {
   );
 };
 
-export default UploadPersonalData;
+export default observer(UploadPersonalData);

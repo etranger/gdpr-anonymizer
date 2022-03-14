@@ -1,4 +1,6 @@
 const dict = {
+  loading: "Loading",
+
   "routes.mainPage": "Main page",
   "routes.uploadPersonalData": "Upload personal data",
   "routes.notFoundPage": "Not found",

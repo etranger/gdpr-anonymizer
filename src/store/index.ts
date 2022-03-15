@@ -1,2 +1,8 @@
-import { PersonalDataStore, usePersonalData } from "./Models/personalData";
+import {
+  PersonalDataStore,
+  usePersonalData,
+  IPersonalDataStore,
+  IPersonalDataModel,
+} from "./Models/personalData";
 export { PersonalDataStore, usePersonalData };
+export type { IPersonalDataStore, IPersonalDataModel };

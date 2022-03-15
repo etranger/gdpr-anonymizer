@@ -1,9 +1,10 @@
 import React, { useCallback, useState, ChangeEvent } from "react";
 import { observer } from "mobx-react-lite";
-import { usePersonalData } from "../../store";
+import { usePersonalData, IPersonalDataModel } from "../../store";
 import { useTranslate } from "react-polyglot";
 import { Typography, Table, message, Checkbox } from "antd";
 import { CheckboxChangeEvent } from "antd/lib/checkbox";
+import dayjs from "../../servicces/dayjs";
 
 import DataProviderSelect from "../data-provider-select";
 import PersonalDataFileUploader from "../personal-data-file-uploader";
@@ -36,7 +37,7 @@ const UploadPersonalData: React.FC = () => {
     []
   );
   const uploadData = useCallback(
-    (value: TableDataRow[]) => personalDataStore.uploadData(value),
+    (value: IPersonalDataModel[]) => personalDataStore.uploadData(value),
     [personalDataStore]
   );
 
@@ -100,13 +101,31 @@ const UploadPersonalData: React.FC = () => {
 
     setUploadDataLoader(true);
 
-    const fetchData = tableData.map((row) =>
-      Object.fromEntries(
+    const fetchData: IPersonalDataModel[] = tableData.map((row) => {
+      const filteredRow = Object.fromEntries(
         Object.entries(row).filter(
           (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
         )
-      )
-    );
+      );
+
+      const dateFormat = (date: string): string => {
+        if (!date) return "";
+
+        const clearedDate = date.replace(/\./g, "-");
+        return dayjs(clearedDate, ["DD-MM-YYYY", "D-M-YYYY"]).format(
+          "YYYY-MM-DD"
+        );
+      };
+
+      return {
+        date: dateFormat(filteredRow.Päivämäärä),
+        name: filteredRow.Tuote,
+        amount: Number(filteredRow.Summa.replace(",", ".")),
+        quantity: Number(filteredRow.Määrä.replace(",", ".")),
+        wallet: filteredRow.Korttinumero,
+        location: filteredRow.Kauppa,
+      };
+    });
 
     uploadData(fetchData)
       .then(() => {

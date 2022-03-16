@@ -1,7 +1,10 @@
-import React, { useCallback, useState, ChangeEvent, useEffect } from "react";
+import React, { useCallback, useState, ChangeEvent } from "react";
+import { observer } from "mobx-react-lite";
+import { usePersonalData, IPersonalDataModel } from "../../store";
 import { useTranslate } from "react-polyglot";
-import { Typography, Table, message, Checkbox, Spin } from "antd";
+import { Typography, Table, message, Checkbox } from "antd";
 import { CheckboxChangeEvent } from "antd/lib/checkbox";
+import dayjs from "../../servicces/dayjs";
 
 import DataProviderSelect from "../data-provider-select";
 import PersonalDataFileUploader from "../personal-data-file-uploader";
@@ -20,7 +23,10 @@ export type ColDescription = {
 
 const UploadPersonalData: React.FC = () => {
   const f = useTranslate();
+  const personalDataStore = usePersonalData();
+
   const [tableDataLoader, setTableDataLoader] = useState<boolean>(false);
+  const [uploadDataLoader, setUploadDataLoader] = useState<boolean>(false);
   const [tableData, setTableData] = useState<TableDataRow[]>([]);
   const [colsDescription, setColsDescription] = useState<ColDescription[]>([]);
   const [walletKey, setWalletKey] = useState<string>("");
@@ -29,6 +35,10 @@ const UploadPersonalData: React.FC = () => {
   const onDataProcessingStart = useCallback(
     (value: boolean) => setTableDataLoader(value),
     []
+  );
+  const uploadData = useCallback(
+    (value: IPersonalDataModel[]) => personalDataStore.uploadData(value),
+    [personalDataStore]
   );
 
   const titleCheckboxInputHandler = useCallback(
@@ -80,18 +90,55 @@ const UploadPersonalData: React.FC = () => {
 
   const sendPersonalDataHandler = useCallback(() => {
     if (walletKey === "") {
-      message.warning("Wrong Lightning wallet");
+      message.warning("Wrong Lightning Wallet");
       return;
     }
 
-    const fetchData = tableData.map((row) =>
-      Object.entries(row).filter(
-        (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
-      )
-    );
+    if (!tableData.length) {
+      message.info("Please select the file");
+      return;
+    }
 
-    console.log("-send-", fetchData);
-  }, [walletKey, tableData, disallowedCols]);
+    setUploadDataLoader(true);
+
+    const fetchData: IPersonalDataModel[] = tableData.map((row) => {
+      const filteredRow = Object.fromEntries(
+        Object.entries(row).filter(
+          (rowItem) => !disallowedCols.has(rowItem[0]) && rowItem[0] !== "key"
+        )
+      );
+
+      const dateFormat = (date: string): string => {
+        if (!date) return "";
+
+        const clearedDate = date.replace(/\./g, "-");
+        return dayjs(clearedDate, ["DD-MM-YYYY", "D-M-YYYY"]).format(
+          "YYYY-MM-DD"
+        );
+      };
+
+      return {
+        date: dateFormat(filteredRow.Päivämäärä),
+        name: filteredRow.Tuote,
+        amount: Number(filteredRow.Summa.replace(",", ".")),
+        quantity: Number(filteredRow.Määrä.replace(",", ".")),
+        wallet: filteredRow.Korttinumero,
+        location: filteredRow.Kauppa,
+      };
+    });
+
+    uploadData(fetchData)
+      .then(() => {
+        message.success("Success");
+        setUploadDataLoader(false);
+      })
+      .catch((err) => {
+        message.warning("Something went wrong, try again later!");
+        message.warning("Error message: " + err.message);
+        console.log("Error message: ", err.message);
+        setUploadDataLoader(false);
+      });
+  }, [walletKey, tableData, disallowedCols, uploadData]);
 
   const walletKeyChangeHandler = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setWalletKey(event.target.value),
@@ -114,6 +161,7 @@ const UploadPersonalData: React.FC = () => {
         pagination={{ pageSize: 100 }}
       />
       <ReceivingRoyalty
+        loading={uploadDataLoader}
         inputChangeHandler={walletKeyChangeHandler}
         buttonClickHandler={sendPersonalDataHandler}
       />
@@ -121,4 +169,4 @@ const UploadPersonalData: React.FC = () => {
   );
 };
 
-export default UploadPersonalData;
+export default observer(UploadPersonalData);

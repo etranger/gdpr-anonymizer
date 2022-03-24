@@ -89,11 +89,6 @@ const UploadPersonalData: React.FC = () => {
   );
 
   const sendPersonalDataHandler = useCallback(() => {
-    if (walletKey === "") {
-      message.warning("Wrong Lightning Wallet");
-      return;
-    }
-
     if (!tableData.length) {
       message.info("Please select the file");
       return;
